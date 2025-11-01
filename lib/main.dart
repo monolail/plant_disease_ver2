@@ -44,6 +44,48 @@ class _HomeScreenState extends State<HomeScreen> {
 
   static const String MODEL_PATH = 'assets/disease_model2.tflite';
   static const String LABELS_PATH = 'assets/class_names_final.json';
+  
+  static const Map<String, String> KOREAN_LABELS = {
+    'Apple___Apple_scab': '사과 - 사과부패병',
+    'Apple___Black_rot': '사과 - 검은 썩음병',
+    'Apple___Cedar_apple_rust': '사과 - 사과 적성병',
+    'Apple___healthy': '사과 - 건강',
+    'Blueberry___healthy': '블루베리 - 건강',
+    'Cherry_(including_sour)___Powdery_mildew': '버찌(신맛 포함) - 흰가루병',
+    'Cherry_(including_sour)___healthy': '버찌(신맛 포함) - 건강',
+    'Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot': '옥수수 - 세르코스포라 잎반점 및 회색 잎반점',
+    'Corn_(maize)___Common_rust_': '옥수수 - 일반 녹병',
+    'Corn_(maize)___Northern_Leaf_Blight': '옥수수 - 북부 잎마름병',
+    'Corn_(maize)___healthy': '옥수수 - 건강',
+    'Grape___Black_rot': '포도 - 검은 썩음병',
+    'Grape___Esca_(Black_Measles)': '포도 - 에스카(블랙 홍역)',
+    'Grape___Leaf_blight_(Isariopsis_Leaf_Spot)': '포도 - 잎마름병',
+    'Grape___healthy': '포도 - 건강',
+    'Orange___Haunglongbing_(Citrus_greening)': '오렌지 - 황룽병(감귤 녹화병)',
+    'Peach___Bacterial_spot': '복숭아 - 세균성 반점병',
+    'Peach___healthy': '복숭아 - 건강',
+    'Pepper,_bell___Bacterial_spot': '피망 - 세균성 반점병',
+    'Pepper,_bell___healthy': '피망 - 건강',
+    'Potato___Early_blight': '감자 - 초기 마름병',
+    'Potato___Late_blight': '감자 - 후기 마름병',
+    'Potato___healthy': '감자 - 건강',
+    'Raspberry___healthy': '라즈베리 - 건강',
+    'Soybean___healthy': '콩 - 건강',
+    'Squash___Powdery_mildew': '호박 - 흰가루병',
+    'Strawberry___Leaf_scorch': '딸기 - 잎마름병',
+    'Strawberry___healthy': '딸기 - 건강',
+    'Tomato___Bacterial_spot': '토마토 - 세균성 반점병',
+    'Tomato___Early_blight': '토마토 - 초기 마름병',
+    'Tomato___Late_blight': '토마토 - 후기 마름병',
+    'Tomato___Leaf_Mold': '토마토 - 잎 곰팡이',
+    'Tomato___Septoria_leaf_spot': '토마토 - 셉토리아 잎반점',
+    'Tomato___Spider_mites Two-spotted_spider_mite': '토마토 - 응애류 (두점박이응애)',
+    'Tomato___Target_Spot': '토마토 - 표적 반점',
+    'Tomato___Tomato_Yellow_Leaf_Curl_Virus': '토마토 - 토마토 황화잎말림 바이러스',
+    'Tomato___Tomato_mosaic_virus': '토마토 - 토마토 모자이크 바이러스',
+    'Tomato___healthy': '토마토 - 건강',
+  };
+  
 
   File? _image; 
   final ImagePicker _picker = ImagePicker();
@@ -52,37 +94,38 @@ class _HomeScreenState extends State<HomeScreen> {
   Interpreter? _interpreter;
   List<String>? _labels;
 
+  String _currentDiagnosisLabel = '';
+
   static const int INPUT_SIZE = 224; 
 
-  // 3.3 이미지 전처리 함수
+  // 이미지 전처리 함수
   List<List<List<List<double>>>> _processImage(File imageFile) {
-      // 1. 이미지 디코딩 및 크기 조정
+      
       final originalImage = img.decodeImage(imageFile.readAsBytesSync());
       if (originalImage == null) {
         throw Exception("이미지 디코딩 실패");
       }
       
-      // 모델 입력 크기로 리사이즈
+      
       final resizedImage = img.copyResize(originalImage, width: INPUT_SIZE, height: INPUT_SIZE);
 
-      // 2. 텐서 형식 초기화: [1, 224, 224, 3] 형태
+      
       final inputTensor = List.generate(
-        1, // 배치 크기
+        1, 
         (i) => List.generate(
           INPUT_SIZE, // 높이
           (y) => List.generate(
             INPUT_SIZE, // 너비
             (x) {
-              // getPixel은 이제 Pixel 객체를 반환합니다.
+              
               final pixel = resizedImage.getPixel(x, y);
               
-              // 🚨 [최종 수정] 🚨 Pixel 객체의 r, g, b 속성에 직접 접근합니다.
-              // 최신 image 패키지에서는 pixel.r.toInt() 와 같이 접근합니다.
+              
               final r = pixel.r.toInt(); 
               final g = pixel.g.toInt(); 
               final b = pixel.b.toInt();
               
-              // 3. 픽셀 값 정규화 (0.0 ~ 1.0)
+
               return [
                 r / 255.0,
                 g / 255.0,
@@ -93,37 +136,44 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
 
-      // List<dynamic> 타입이 List<double>로 변환되도록 명시적 cast를 추가
       return inputTensor.cast<List<List<List<double>>>>();
   }
 
-  Map<String, dynamic> _postProcessResult(List<List<double>> output) {
-    if (_labels == null || _labels!.isEmpty) {
-      return {'label': '레이블을 찾을 수 없습니다.', 'confidence': 0.0};
-    }
+Map<String, dynamic> _postProcessResult(List<List<double>> output) {
+  if (_labels == null || _labels!.isEmpty) {
+    return {'label': '레이블을 찾을 수 없습니다.', 'confidence': 0.0};
+  }
 
-    final probabilities = output[0];
-    double maxConfidence = 0.0;
-    int maxIndex = -1;
+  final probabilities = output[0];
+  double maxConfidence = 0.0;
+  int maxIndex = -1;
+  String originalLabel = '진단 실패'; 
 
-    // 가장 높은 확률을 가진 클래스(인덱스) 찾기
-    for (int i = 0; i < probabilities.length; i++) {
-      if (probabilities[i] > maxConfidence) {
-        maxConfidence = probabilities[i];
-        maxIndex = i;
-      }
-    }
 
-    if (maxIndex != -1 && maxIndex < _labels!.length) {
-      return {
-        'label': _labels![maxIndex],
-        'confidence': maxConfidence,
-      };
-    } 
-    else {
-      return {'label': '진단 실패: 알 수 없는 결과', 'confidence': 0.0};
+  for (int i = 0; i < probabilities.length; i++) {
+    if (probabilities[i] > maxConfidence) {
+      maxConfidence = probabilities[i];
+      maxIndex = i;
     }
   }
+
+  if (maxIndex != -1 && maxIndex < _labels!.length) {
+
+    originalLabel = _labels![maxIndex];
+    
+    final koreanLabel = KOREAN_LABELS[originalLabel] ?? originalLabel; 
+
+    return {
+
+      'label': koreanLabel, 
+      'confidence': maxConfidence,
+      'originalLabel': originalLabel, 
+    };
+  } 
+  else {
+    return {'label': '진단 실패: 알 수 없는 결과', 'confidence': 0.0};
+  }
+}
 
 
   @override
