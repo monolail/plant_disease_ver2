@@ -98,7 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   static const int INPUT_SIZE = 224; 
 
-  // 이미지 전처리 함수
+
   List<List<List<List<double>>>> _processImage(File imageFile) {
       
       final originalImage = img.decodeImage(imageFile.readAsBytesSync());
@@ -244,24 +244,20 @@ Map<String, dynamic> _postProcessResult(List<List<double>> output) {
     });
 
     try {
-      // 1. 전처리 실행 (3.3 단계)
+
       final input = _processImage(_image!);
 
-      // 2. 모델 출력 버퍼 준비
-      // [1, 클래스 수] 형태의 출력 텐서를 가정합니다.
-      // 클래스 수는 _labels의 길이와 같아야 합니다.
       final output = List.filled(1 * _labels!.length, 0.0).reshape([1, _labels!.length]);
 
-      // 🚨 [추가] 🚨 3. 모델 실행
-      // input(전처리된 이미지)을 모델에 넣고 output 버퍼에 결과를 받습니다.
+   
       _interpreter!.run(input, output);
       print('✅ 모델 실행 완료');
 
-      // 4. 결과 해석
+
       final result = _postProcessResult(output.cast<List<double>>());
       final confidencePercent = (result['confidence'] * 100).toStringAsFixed(2);
       
-      // 5. 결과 텍스트 업데이트
+
       setState(() {
         _isDiagnosing = false;
         _diagnosisResult = 
@@ -285,38 +281,38 @@ Map<String, dynamic> _postProcessResult(List<List<double>> output) {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // 1. 상단 AppBar
+
       appBar: AppBar(
         title: const Text('병충해 진단 서비스', style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
-          // 메뉴 아이콘
+
           IconButton(
             icon: const Icon(Icons.menu),
             onPressed: () {
-              // TODO: 사이드 메뉴 또는 설정 페이지 연결
+    
             },
           ),
         ],
       ),
-      // 2. 본문 (스크롤 가능)
+   
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            // 2-A. 안내 메시지 (파란색 박스)
+
             _buildGuidanceBox(),
             const SizedBox(height: 20),
 
-            // 2-B. 이미지 Placeholder 영역
+   
             _buildImagePlaceholder(),
             const SizedBox(height: 20),
 
-            // 2-C. 버튼 영역
+  
             _buildActionButtons(),
             const SizedBox(height: 30),
 
-            // 2-D. 진단 결과 섹션
+
             _buildResultSection(),
           ],
         ),
@@ -324,7 +320,7 @@ Map<String, dynamic> _postProcessResult(List<List<double>> output) {
     );
   }
 
-// --- 위젯 구성 함수 분리 (가독성 향상) ---
+
 
   Widget _buildGuidanceBox() {
     return Container(
@@ -372,24 +368,37 @@ Map<String, dynamic> _postProcessResult(List<List<double>> output) {
   Widget _buildActionButtons() {
     return Row(
       children: <Widget>[
-        // '사진 업로드' 버튼
+        // 🚨 [추가] 🚨 '카메라 촬영' 버튼
         Expanded(
           child: OutlinedButton.icon(
-            icon: const Icon(Icons.photo_library),
-            label: const Text("사진 업로드"),
-            onPressed: () => _pickImage(ImageSource.gallery), // 🚨 [수정 완료] 이미지 선택 로직 연결
+            icon: const Icon(Icons.camera_alt),
+            label: const Text("카메라 촬영"),
+            onPressed: () => _pickImage(ImageSource.camera), // 카메라 소스 연결
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 15),
             ),
           ),
         ),
         const SizedBox(width: 10),
-        // '진단하기' 버튼
+        
+        Expanded(
+          child: OutlinedButton.icon(
+            icon: const Icon(Icons.photo_library),
+            label: const Text("갤러리 업로드"),
+            onPressed: () => _pickImage(ImageSource.gallery), // 갤러리 소스 연결
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 15),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        
+
         Expanded(
           child: ElevatedButton.icon(
             icon: const Icon(Icons.science_outlined),
             label: const Text("진단하기"),
-            onPressed: (_image != null && !_isDiagnosing) ? _runDiagnosis : null, // 🚨 [수정 완료] 로직 연결 및 활성화 조건
+            onPressed: (_image != null && !_isDiagnosing) ? _runDiagnosis : null,
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 15),
             ),
