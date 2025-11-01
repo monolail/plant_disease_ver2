@@ -2,9 +2,8 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:image/image.dart' as img;
-
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
-
 import 'dart:convert';
 
 void main() {
@@ -32,7 +31,7 @@ class DiseaseDiagnosisApp extends StatelessWidget {
   }
 }
 
-// 메인 화면 (StatefulWidget)
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
   @override
@@ -97,6 +96,17 @@ class _HomeScreenState extends State<HomeScreen> {
   String _currentDiagnosisLabel = '';
 
   static const int INPUT_SIZE = 224; 
+
+  Future<void> _launchSearch(String query) async {
+    final encodedQuery = Uri.encodeComponent(query);
+    final url = Uri.parse('https://www.google.com/search?q=$encodedQuery');
+
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication); 
+    } else {
+      print('$url을 실행할 수 없습니다.');
+    }
+  }
 
 
   List<List<List<List<double>>>> _processImage(File imageFile) {
@@ -245,16 +255,22 @@ Map<String, dynamic> _postProcessResult(List<List<double>> output) {
 
     try {
 
-      final input = _processImage(_image!);
+      
 
+      final input = _processImage(_image!);
       final output = List.filled(1 * _labels!.length, 0.0).reshape([1, _labels!.length]);
 
    
       _interpreter!.run(input, output);
       print('✅ 모델 실행 완료');
 
+      
+
 
       final result = _postProcessResult(output.cast<List<double>>());
+      
+      _currentDiagnosisLabel = result['label'];
+      
       final confidencePercent = (result['confidence'] * 100).toStringAsFixed(2);
       
 
@@ -263,7 +279,7 @@ Map<String, dynamic> _postProcessResult(List<List<double>> output) {
         _diagnosisResult = 
             "**진단 결과:** ${result['label']}\n\n"
             "**신뢰도:** ${confidencePercent}%\n\n"
-            "식물의 상태와 병충해에 대한 자세한 정보는 검색을 통해 확인해 주세요.";
+            "식물의 상태와 병충해에 대한 자세한 정보는 아래 '자세히 검색하기' 버튼을 이용해 주세요.";
       });
 
     } catch (e) {
@@ -368,7 +384,7 @@ Map<String, dynamic> _postProcessResult(List<List<double>> output) {
   Widget _buildActionButtons() {
     return Row(
       children: <Widget>[
-        // 🚨 [추가] 🚨 '카메라 촬영' 버튼
+
         Expanded(
           child: OutlinedButton.icon(
             icon: const Icon(Icons.camera_alt),
@@ -408,12 +424,13 @@ Map<String, dynamic> _postProcessResult(List<List<double>> output) {
     );
   }
 
+
+
   Widget _buildResultSection() {
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 결과 헤더
         Row(
           crossAxisAlignment: CrossAxisAlignment.baseline,
           textBaseline: TextBaseline.alphabetic,
@@ -425,6 +442,7 @@ Map<String, dynamic> _postProcessResult(List<List<double>> output) {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(width: 10),
+            
             Text(
               "| PLANT DISEASE",
               style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
@@ -434,13 +452,33 @@ Map<String, dynamic> _postProcessResult(List<List<double>> output) {
         const Divider(height: 10, thickness: 1),
         const SizedBox(height: 10),
 
-        // 🚨 [수정] 🚨 결과 내용: 로딩 상태에 따라 위젯 전체를 반환하도록 수정
+        
         _isDiagnosing 
           ? const Center(child: CircularProgressIndicator()) 
           : Text(
-              _diagnosisResult, // ⬅️ 상태 변수 사용
+              _diagnosisResult, 
               style: const TextStyle(fontSize: 16, height: 1.5),
             ),
+        
+
+        if (!_isDiagnosing && 
+            _currentDiagnosisLabel.isNotEmpty && 
+            _currentDiagnosisLabel != '모델 및 레이블 로드 완료. 사진을 선택해 진단을 시작하세요.')
+          Padding(
+            padding: const EdgeInsets.only(top: 20.0),
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.search),
+              // _currentDiagnosisLabel에 저장된 한국어 레이블을 버튼 텍스트에 사용
+              label: Text('"${_currentDiagnosisLabel}" 자세히 검색하기'), 
+              // 버튼 클릭 시 _launchSearch 함수 실행 (이 함수는 따로 정의해야 함)
+              onPressed: () => _launchSearch(_currentDiagnosisLabel), 
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue.shade700,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              ),
+            ),
+          ),
       ],
     );
   }
