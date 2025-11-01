@@ -1,16 +1,11 @@
-# flutter_application_1
+# 병충해 진단 프로그램 제작 ver2
 
-A new Flutter project.
+----------------
 
-## Getting Started
+## 프로젝트 소개
+>이 프로젝트는 병충해 진단 서비스를 애플리케이션으로 구현해봄으로써 일반인들이 간편하고, 편리하게 농사와 같은 업무에 도움이 되고자 개발하였다.
 
-This project is a starting point for a Flutter application.
+## 진행 과정
+### 1. 주제 선정 이유
+> 
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
