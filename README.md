@@ -7,5 +7,10 @@
 
 ## 진행 과정
 ### 1. 주제 선정 이유
-> Read.me가 정상작동하는지 Test중 123다시 진행중
+> 휴대폰에서 앱을 통해 간단하게 식물의 상태를 알아보고 사용자에게 유용한 정보를 제공할 수 있는 앱을 구현하고자 하였다.
 
+### 2. 데이터 소개
+> 선정한 데이터
+* 'kaggle'에서 가져온 [New Plant Diseases Dataset](https://www.kaggle.com/datasets/vipoooool/new-plant-diseases-dataset?resource=download)을 참고하여 식물의 상태에 대한 정보를 제공하였다.
+
+### 3. 프로젝트 진행 정도
