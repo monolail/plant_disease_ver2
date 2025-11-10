@@ -97,14 +97,27 @@ class _HomeScreenState extends State<HomeScreen> {
 
   static const int INPUT_SIZE = 224; 
 
-  Future<void> _launchSearch(String query) async {
+  Future<void> _launchGoogleSearch(String query) async {
     final encodedQuery = Uri.encodeComponent(query);
     final url = Uri.parse('https://www.google.com/search?q=$encodedQuery');
 
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication); 
     } else {
-      print('$url을 실행할 수 없습니다.');
+      print('Google 검색 오류: $url을 실행할 수 없습니다.');
+    }
+  }
+
+
+  Future<void> _launchRdaPortal(String query) async {
+    final encodedQuery = Uri.encodeComponent(query);
+
+    final url = Uri.parse('https://ncpms.rda.go.kr/npms/UntySrchListRM.np?q=$encodedQuery');
+
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication); 
+    } else {
+      print('농촌진흥청 포털 연결 오류: $url을 실행할 수 없습니다.');
     }
   }
 
@@ -277,8 +290,8 @@ Map<String, dynamic> _postProcessResult(List<List<double>> output) {
       setState(() {
         _isDiagnosing = false;
         _diagnosisResult = 
-            "**진단 결과:** ${result['label']}\n\n"
-            "**신뢰도:** ${confidencePercent}%\n\n"
+            "진단 결과: ${result['label']}\n\n"
+            "신뢰도: ${confidencePercent}%\n\n"
             "식물의 상태와 병충해에 대한 자세한 정보는 아래 '자세히 검색하기' 버튼을 이용해 주세요.";
       });
 
@@ -424,10 +437,8 @@ Map<String, dynamic> _postProcessResult(List<List<double>> output) {
     );
   }
 
-
-
   Widget _buildResultSection() {
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -461,22 +472,42 @@ Map<String, dynamic> _postProcessResult(List<List<double>> output) {
             ),
         
 
+
         if (!_isDiagnosing && 
             _currentDiagnosisLabel.isNotEmpty && 
             _currentDiagnosisLabel != '모델 및 레이블 로드 완료. 사진을 선택해 진단을 시작하세요.')
           Padding(
             padding: const EdgeInsets.only(top: 20.0),
-            child: ElevatedButton.icon(
-              icon: const Icon(Icons.search),
-              // _currentDiagnosisLabel에 저장된 한국어 레이블을 버튼 텍스트에 사용
-              label: Text('"${_currentDiagnosisLabel}" 자세히 검색하기'), 
-              // 버튼 클릭 시 _launchSearch 함수 실행 (이 함수는 따로 정의해야 함)
-              onPressed: () => _launchSearch(_currentDiagnosisLabel), 
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue.shade700,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.school, size: 20),
+                  label: Text('농촌진흥청 포털에서 "${_currentDiagnosisLabel}" 검색'), 
+                  onPressed: () => _launchRdaPortal(_currentDiagnosisLabel), 
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green.shade700, // 색상 변경으로 강조
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                ),
+                const SizedBox(height: 10),
+
+
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.search, size: 20),
+                  label: Text('Google에서 "${_currentDiagnosisLabel}" 검색'), 
+                  onPressed: () => _launchGoogleSearch(_currentDiagnosisLabel), 
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.grey.shade700,
+                    side: BorderSide(color: Colors.grey.shade400),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                ),
+              ],
             ),
           ),
       ],
