@@ -112,7 +112,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _launchRdaPortal(String query) async {
     final encodedQuery = Uri.encodeComponent(query);
 
-    final url = Uri.parse('https://ncpms.rda.go.kr/npms/UntySrchListRM.np?q=$encodedQuery');
+    final url = Uri.parse('https://ncpms.rda.go.kr/npms/UntySrchListR.np?srchWord=$encodedQuery');
+/*
+https://ncpms.rda.go.kr/npms/UntySrchListR.np?srchWord=%ED%86%A0%EB%A7%88%ED%86%A0
+
+*/
 
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication); 
