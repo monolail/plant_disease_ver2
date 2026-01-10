@@ -27,7 +27,7 @@
 2. VSCODE
   *  Flutter 확장 기능을 사용하여 병충해 진단 앱의 Dart 코드 작성, 디버깅, 실시간 미리보기(Hot Reload) 등의 기능으로 효율적인 크로스 플랫폼 앱 개발이 간편.
 
-### 3. 프로젝트 진행 정도
+### 3. 프로젝트 진행 순서
 > 병충해 진단 앱 개발 프로젝트 진행 과정
 1. 데이터 확보 및 준비 : AI 모델 학습을 위한 데이터셋 준비
 
@@ -41,4 +41,12 @@
 
 6. 최종 테스트 및 배포 : 전체 시스템의 안정성과 사용자 경험 검증 후 앱 배포
 
-> 현재 진행 상황 : 갑작스런 애플리케이션 다운에 방법 모색 및 모델 살리는 중. : 원인 : 메모리 공간 부족 및 flutter 업데이트로 인한 동기 오류
+### 4. 테스트 및 결과 동작
+> 동작 사진
+<img width="328" height="386" alt="image" src="https://github.com/user-attachments/assets/92a1f2e0-2d78-424e-8f0e-fa217f2f5e8c" />
+<img width="320" height="386" alt="image" src="https://github.com/user-attachments/assets/3d9da7b9-55bb-4e2b-93e5-2499e44f1206" />
+
+</br>
+<img width="320" height="363" alt="image" src="https://github.com/user-attachments/assets/5feaa523-9c99-4a39-a585-806d4297d356" />
+<img width="320" height="363" alt="image" src="https://github.com/user-attachments/assets/4d5127d0-72ed-463e-adbe-92df32b5e168" />
+> 동작 설명
